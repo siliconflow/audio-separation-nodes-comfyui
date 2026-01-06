@@ -77,10 +77,11 @@ class AudioSeparation:
         )
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"模型文件不存在，请确认路径：{model_path}")
-        state_dict = torch.load(model_path, map_location=device)
-        model.load_state_dict(state_dict)
-        model.to(device)
-        model.eval()
+        with torch.no_grad():
+            state_dict = torch.load(model_path, map_location=device)
+            model.load_state_dict(state_dict)
+            model.to(device)
+            model.eval()
         self.model_sample_rate = bundle.sample_rate
 
         waveform = ensure_stereo(waveform)
