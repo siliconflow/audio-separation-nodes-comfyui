@@ -66,8 +66,22 @@ class AudioSeparation:
         waveform = waveform.squeeze(0).to(device)
         self.input_sample_rate_: int = audio["sample_rate"]
 
+        import os
+        import folder_paths
         bundle = HDEMUCS_HIGH_MUSDB_PLUS
-        model: torch.nn.Module = bundle.get_model().to(device)
+        model = bundle._model_factory_func()
+        model_path = os.path.join(
+            folder_paths.models_dir, 
+            "audio",
+            "hdemucs_high_trained.pt"
+        )
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"模型文件不存在，请确认路径：{model_path}")
+        with torch.no_grad():
+            state_dict = torch.load(model_path, map_location=device)
+            model.load_state_dict(state_dict)
+            model.to(device)
+            model.eval()
         self.model_sample_rate = bundle.sample_rate
 
         waveform = ensure_stereo(waveform)
